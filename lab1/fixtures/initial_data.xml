@@ -1,0 +1,10 @@
+[
+	{
+		"model": "lab1.ClientData",
+		"pk": 1,
+		"fields": {
+			"client_id": "41247-NWTAFVODdnE122H2muWJ",
+			"client_secret": "qJoyFZ4uD6Yj0gsQA2xp"
+		}
+	}
+]
