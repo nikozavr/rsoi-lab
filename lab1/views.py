@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.http import HttpResponse, Http404, JsonResponse
 from lab1.models import ClientData, PersonalData
 
@@ -9,10 +9,6 @@ def index(request):
     client_data = ClientData.objects.get(id=1)
     context = {'client_data': client_data}
     return render(request, 'lab1/index.html', context)
-#   return HttpResponse('Привет')
-
-def code(request):
-    return render(request, 'lab1/code.html', )
 
 def getcode(request):
     if PersonalData.objects.all().count() != 0:
@@ -20,11 +16,17 @@ def getcode(request):
         personal_data_d.delete()
 
     personal_data_code = PersonalData(code=request.GET.get('code',''))
-   
+    personal_data_code.save()
+
+    return redirect('http://localhost:8000/lab1/result/')
+
+
+def getresult(request):
+    personal_data_code = PersonalData.objects.all()[0]
 
     post_data = {'grant_type': 'authorization_code',
                 'code': personal_data_code.code,
-                'redirect_uri': 'http%3A%2F%2Flocalhost%3A8000%2Flab1%2Ftoken%2F',
+                'redirect_uri': 'http%3A%2F%2Flocalhost%3A8000%2Flab1%2Fresult%2F',
                 'client_id': ClientData.objects.get(id=1).client_id,
                 'client_secret': ClientData.objects.get(id=1).client_secret
     }

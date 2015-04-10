@@ -5,5 +5,5 @@ from lab1 import views
 urlpatterns = patterns('',
     url(r'^$', views.index, name='index'),
     url(r'^code/', views.getcode, name='getcode'),
-    url(r'^token/', views.gettoken, name='gettoken')
+    url(r'^result/', views.getresult, name='getresult')
 )
