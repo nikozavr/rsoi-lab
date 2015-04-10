@@ -1,4 +1,6 @@
 from django.db import models
+from django.http import HttpResponse, HttpResponseRedirect
+import requests
 
 class ClientData(models.Model):
     client_id = models.CharField(max_length=200)
@@ -19,3 +21,11 @@ class PersonalData(models.Model):
 
     def __str__(self):
         return self.code
+
+    def get_account(access_token, token_type):
+        auth = {"access_token": access_token}
+        headers = {'Content-Type': 'application/json',
+                    'Authorization': token_type[0].upper()+ token_type[1:] + ' ' + access_token}
+        r = requests.get("https://webapi.teamviewer.com/api/v1/account", headers=headers)
+        result = r.json()
+        return result
