@@ -1,14 +1,16 @@
 <!DOCTYPE html>
+{% load staticfiles %}
+
 <html lang="en"><head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <title>Sign in · Twitter Bootstrap</title>
+    <meta charset="utf-8">   
+    <title>Вход</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
 
     <!-- Le styles -->
-    <link href="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap.css" rel="stylesheet">
+    <link href="{% static "bootstrap/bootstrap.css" %}" rel="stylesheet">
     <style type="text/css">
       body {
         padding-top: 40px;
@@ -17,7 +19,7 @@
       }
 
       .form-signin {
-        max-width: 300px;
+        max-width: 350px;
         padding: 19px 29px 29px;
         margin: 0 auto 20px;
         background-color: #fff;
@@ -42,7 +44,7 @@
       }
 
     </style>
-    <link href="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-responsive.css" rel="stylesheet">
+    <link href="{% static "bootstrap/bootstrap-responsive.css" %}" rel="stylesheet">
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -62,13 +64,14 @@
     <div class="container">
 
       <form class="form-signin">
-        <h2 class="form-signin-heading">Please sign in</h2>
+        <h2 class="form-signin-heading">Введите для входа</h2>
         <input class="input-block-level" placeholder="Email address" type="text">
         <input class="input-block-level" placeholder="Password" type="password">
         <label class="checkbox">
-          <input value="remember-me" type="checkbox"> Remember me
+          <input value="remember-me" type="checkbox"> Запомнить
         </label>
-        <button class="btn btn-large btn-primary" type="submit">Sign in</button>
+        <button class="btn btn-large btn-primary" type="submit">Войти</button>
+        <button class="btn btn-large btn-primary btn-regis" type="submit">Регистрация</button>
       </form>
 
     </div> <!-- /container -->
@@ -76,20 +79,18 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/jquery.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-transition.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-alert.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-modal.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-dropdown.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-scrollspy.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-tab.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-tooltip.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-popover.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-button.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-collapse.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-carousel.js"></script>
-    <script src="Sign%20in%20%C2%B7%20Twitter%20Bootstrap_files/bootstrap-typeahead.js"></script>
-
-  
+    <script src="{% static "bootstrap/jquery.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-transition.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-alert.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-modal.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-dropdown.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-scrollspy.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-tab.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-tooltip.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-popover.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-button.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-collapse.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-carousel.js" %}"></script>
+    <script src="{% static "bootstrap/bootstrap-typeahead.js" %}"></script>
 
 </body></html>
