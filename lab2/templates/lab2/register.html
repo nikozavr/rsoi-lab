@@ -47,10 +47,10 @@
 			  <fieldset>
 			  	<div id="form">
 			    <div class="control-group" id="top">
-			      <!-- Username -->
-			      <label class="col-sm-2 control-label"  for="username">Логин</label>
+			      <!-- login -->
+			      <label class="col-sm-2 control-label"  for="login">Логин</label>
 			      <div class="col-sm-10">
-			        <input type="text" id="username" name="username" placeholder="" class="input-xlarge">
+			        <input type="text" id="login" name="login" placeholder="" class="input-xlarge">
 			        <p class="help-block">Придумайте свой логин</p>
 			      </div>
 			    </div>
@@ -143,15 +143,15 @@
   		function checkForm(form)
   		{
   			var error_text = "";
-  			if(form.username.value == "") {
+  			if(form.login.value == "") {
 		      error_text = "Логин не указан."
-		      form.username.focus();
+		      form.login.focus();
 		      return error_text;
 		    }
 		    re = /^\w+$/;
-		    if(!re.test(form.username.value)) {
-		      error_text = "Error: Username must contain only letters, numbers and underscores!";
-		      form.username.focus();
+		    if(!re.test(form.login.value)) {
+		      error_text = "Error: login must contain only letters, numbers and underscores!";
+		      form.login.focus();
 		      return error_text;
 		    }
 
@@ -167,7 +167,7 @@
 		        form.password.focus();
 		        return error_text;
 		      }
-		      if(form.password.value == form.username.value) {
+		      if(form.password.value == form.login.value) {
 		        error_text = "Пароль должен отличаться от логина";
 		        form.password.focus();
 		        return error_text;
