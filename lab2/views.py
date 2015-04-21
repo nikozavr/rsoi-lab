@@ -11,7 +11,9 @@ def authorize(request):
 
 
 def register(request):
-	return render(request, 'lab2/register.html', )
+	users = Users.objects.all();
+	context = { 'users': users};
+	return render(request, 'lab2/register.html', context)
 
 def register_post(request):
 	if request.method == "POST":
@@ -20,5 +22,7 @@ def register_post(request):
 					request.POST.get("name", ""),
 					request.POST.get("phone", ""),
 					request.POST.get("password",""));
-		return HttpResponse(user);
+		user.save()
+		test = Users.objects.all();
+		return HttpResponse(test);
 	return render(request, 'lab2/register_success.html',)
