@@ -69,11 +69,10 @@ class Country(models.Model):
 	name = models.CharField(max_length=30)
 
 class City(models.Model):
-	country = ForeignKey(Country)
+	country = models.ForeignKey(Country)
 	name = models.CharField(max_length=30)
 
 class Monument(models.Model):
-	city = ForeignKey(City)
+	city = models.ForeignKey(City)
 	name = models.CharField(max_length=30)
 	date = models.DateField()
-	
