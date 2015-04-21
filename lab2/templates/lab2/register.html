@@ -42,7 +42,7 @@
 
     <div class="container">
     	<div class="starter-template" id="blank">
-      		<form class="form-horizontal" onsubmit="return submitForm(this);" action="{% url 'lab2:register_post' %}" method="POST">
+      		<form class="form-horizontal" onsubmit="if(submitForm(this)){ return checkUser(this);} else { return false; }" action="{% url 'lab2:register_post' %}" method="POST">
 			   {% csrf_token %}
 			  <fieldset>
 			  	<div id="form">
@@ -111,8 +111,8 @@
  		</div>
     </div>
 </form>
-
-  <script>
+	
+  <script type="text/javascript">
   		function submitForm(form){
   			var error_text = checkForm(form);
   			if(error_text == ""){
@@ -182,18 +182,28 @@
 		     	 return error_text;
 		    }
 
-		    var op = {{ users }}
+		 //   var op = "{{users}}"
 
-		    if( {{ users }} ){
-		    	var users = {{ users }};
-		    	for (var i = 0; i < users.length; i++) {
-		    		if(form.login.value == users[i]['login']){
-		    			error_text = "Такой логин уже занят. Придумайте другой.";	
-		    		}
-		    	}
+
+
+		 //   if( {{ users }} ){
+		  //  	var users = {{ users }};
+		   // 	for (var i = 0; i < users.length; i++) {
+		   // 		if(form.login.value == users[i]['login']){
+		   // 			error_text = "Такой логин уже занят. Придумайте другой.";	
+		    //		}
+		   // 	}
 		    
 
-		    }
+		  //  }
+		  users = '{{ users|safe }}';
+		  if(users){
+		  	for(var i = 0; i < users.length; i++) {
+		  		if( form.login.value == users[i]['login']){
+		  			error_text = "Такой логин уже занят. Придумайте другой.";
+		  		}
+		  	}
+		  }
 	
 	    return error_text;
 	}
@@ -209,3 +219,4 @@
     <script src="{% static "bootstrap/js/bootstrap.min.js" %}"></script>
   </body>
 </html>
+

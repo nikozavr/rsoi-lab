@@ -4,7 +4,12 @@ from lab2 import views
 
 urlpatterns = patterns('',
     url(r'^$', views.index, name='index'),
-    url(r'^authorize/$', views.authorize, name='authorize'),
+    url(r'^auth/$', views.auth, name='auth'),
     url(r'^register/$', views.register, name='register'),
     url(r'^register/post/$', views.register_post, name='register_post'),
+    url(r'^account/$', views.account, name='account'),
+    url(r'^auth/token/$', views.token, name='token'),
+    url(r'^country/$', views.country, name='country'),
+    url(r'^city/$', views.city, name='city'),
+    url(r'^monument/$', views.monument, name='monument'),
 )
