@@ -1,7 +1,9 @@
-from django.shortcuts import render_to_response, render
-from django.http import HttpResponse
-from lab2.models import Users, Apps
+from django.shortcuts import render_to_response, render, redirect
+from django.http import HttpResponse, HttpResponseBadRequest
+from lab2.models import Users, Apps, Token
 from django.core import serializers
+from django.core.exceptions import ObjectDoesNotExist
+
 
 from django.contrib.auth.hashers import make_password, check_password
 import json
@@ -11,36 +13,44 @@ def index(request):
 	return render(request, 'lab2/index.html', )
 
 def auth(request):
-	user = current_user()
-	if request.method == "GET" and user is not None:
+	user = current_user(request)
+	if request.method == "GET" and user != None:
 		client_id = request.GET.get("client_id","")
 		redirect_uri = request.GET.get("redirect_uri","")
 		response_type = request.GET.get("response_type","")
-		if response_type is not None and response_type == 'code':
-			if client_id is not None:
-				client = Client.query.filter_by(client_id=client_id).first()
-				if client.user_id == user.id:
-					if client is not None:
-						token = Token.query.filter_by(client_id=client.id).first()
-						if token is None:
-							token = Token(client.id, client_id, redirect_uri)
-							db.session.add(token)
-							db.session.commit()
-						elif token.code_expired():
-							db.session.delete(token)
-							token = Token(client.id, client_id, redirect_uri)
-							db.session.add(token)
-							db.session.commit()
-						if redirect_uri is not None:
+		if response_type == 'code':
+			if client_id != None:
+				try:
+					app = Apps.objects.get(client_id=client_id)
+					user_app = app.user
+					if user.id == user_app.id:
+						try:
+							token = Token.objects.get(app_id=app)
+							if token.code_expired():
+								token.delete()
+								token = Token.create(app, redirect_uri)
+								tokeb.save()
+						except ObjectDoesNotExist:
+							token = Token.create(app, redirect_uri)
+							token.save()
+
+						if redirect_uri != None:
 							return redirect(redirect_uri + '?code=' + token.code)
 						else:
 							return json.dumps({'code' : token.code})
-				else:
-					return 'Incorrect credentials: mismatch of client and user'
-			return 'Inocrrect credentials: client_id is required'
+					else:
+						return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
+											"info": "client_id is not correct"}))
+				except ObjectDoesNotExist:
+						return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
+											"info": "client_id is not correct"}))
+			return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
+										"info": "client_id is required"}))
 		else:
-			return 'Incorrect response_type: value of response_type must be code'
+			return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
+										"info": "value of response_type must be code"}))
 	if request.method == "GET" and user is None:
+
 		return render(request, 'lab2/authorize.html', )
 	if request.method == "POST":
 		error_text = ""
@@ -48,7 +58,10 @@ def auth(request):
 		password = request.POST.get("password", "")
 		try:
 			user = Users.objects.get(login=login)
-			if check_password()
+			if check_password(password, user.password) == False:
+				error_text = "Неправильный пароль"
+			else:
+				request.session['id'] = user.id
 		except Users.DoesNotExist:
 			error_text = "Ошибка входа"
 
@@ -57,7 +70,7 @@ def auth(request):
 			context = {"name": user.name,
 					"client_id": app.client_id,
 					"client_secret": app.client_secret}
-			return render(request, 'lab2/account.html', context)
+			return redirect(request.url)
 		else:
 			return render(request, 'lab2/authorize.html', {"error_text": error_text})
 
@@ -100,6 +113,32 @@ def register_post(request):
 	return render(request, 'lab2/register_success.html', )
 
 def token(request):
+	if request.method == "POST":
+		code = request.POST.get("code","")
+		client_id = request.POST.get("client_id","")
+		client_secret = request.POST.get("client_secret","")
+		redirect_uri = request.POST.get("redirect_uri","")
+		grant_type = request.POST.get("grant_type","")
+		if grant_type == "grant_type":
+			try:
+				app = Apps.objects.get(client_id=client_id)
+				if app.client_secret == client_secret:
+					try:
+						token = Token.objects.get(app_id=app)
+					except ObjectDoesNotExist:
+						return 
+				else:
+					return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
+										"info": "client_secret is invalid"}))
+
+			except ObjectDoesNotExist:
+				return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
+										"info": "client_id is invalid"}))
+
+		else:
+			return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
+										"info": "grant_type must be grant_type"}))			
+
 	return HttpResponse("token")
 
 def country(request):
@@ -112,10 +151,22 @@ def monument(request):
 	return HttpResponse("monument")
 
 def account(request):
-	return render(request, 'lab2/account.html', )
+	user = current_user(request)
+	app = user.apps_set.get()
+	context = {"name": user.name,
+				"client_id": app.client_id,
+				"client_secret": app.client_secret}
+	return render(request, 'lab2/account.html', context)
+
 def userinfo(request):
 	return HttpResponse("userinfo")
 
+def logout(request):
+	try:
+		del request.session['id']
+	except KeyError:
+		pass
+	return HttpResponse("Вы вышли")
 
 def current_user(request):
 	if 'id' in request.session:
