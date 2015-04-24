@@ -1,12 +1,8 @@
 from django.shortcuts import render_to_response, render, redirect
-from django.http import HttpResponse, HttpResponseBadRequest
-from lab2.models import Users, Apps, Token
-from django.core import serializers
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
+from lab2.models import Users, Apps, Token, Manufacturers, Devices
 from django.core.exceptions import ObjectDoesNotExist
-
 from django.views.decorators.csrf import csrf_exempt
-
-
 from django.contrib.auth.hashers import make_password, check_password
 import json
 
@@ -188,18 +184,18 @@ def issue_access_token(token, code, redirect_uri):
 		return (json.dumps({'error': "invalid_grant", "info": "code is incorrect"}),1)
 
 def account(request):
-	if request.method == "GET"
-	user = current_user(request)
-	if user != None:
-		app = user.apps_set.get()
-		context = {"name": user.name,
-					"client_id": app.client_id,
-					"client_secret": app.client_secret}
-	else:
-		context = {"name": "None",
-					"client_id": "None",
-					"client_secret": "None"}
-	return render(request, 'lab2/account.html', context)
+	if request.method == "GET":
+		user = current_user(request)
+		if user != None:
+			app = user.apps_set.get()
+			context = {"name": user.name,
+						"client_id": app.client_id,
+						"client_secret": app.client_secret}
+		else:
+			context = {"name": "None",
+						"client_id": "None",
+						"client_secret": "None"}
+		return render(request, 'lab2/account.html', context)
 
 def userinfo(request):
 #	if request.method == "GET":
@@ -222,3 +218,51 @@ def current_user(request):
 		except ObjectDoesNotExist:
 			return None
 	return None
+
+def manufacturers(request):
+	return HttpResponse("manufacturers")
+
+def man_detail(request, manufacturer_id):
+	authorized = check_authorization(request)
+	if authorized == True:
+		try:
+			manufacturer = Manufacturers.objects.get(pk=manufacturer_id)
+			return HttpResponse(json.dumps({"id": manufacturer.id,
+											"name": manufacturer.name,
+											"established": manufacturer.established,
+											"country": manufacturer.country}))
+		except ObjectDoesNotExist:
+			return HttpResponseNotFound(json.dumps({"error": "Manufacturer with this ID is not found"}))
+	else:
+		return HttpResponse(json.dumps({"error": "unauthorized"}), status=401)	
+
+def devices(request):
+	return HttpResponse("devices")
+
+def dev_detail(request, device_id):
+	authorized = check_authorization(request)
+	if authorized == True:
+		try:
+			device = Devices.objects.get(pk=device_id)
+			return HttpResponse(json.dumps({"id": device.id,
+											"name": device.name,
+											"established": device.established,
+											"country": device.country}))
+		except ObjectDoesNotExist:
+			return HttpResponseNotFound(json.dumps({"error": "Device with this ID is not found"}))
+	else:
+		return HttpResponse(json.dumps({"error": "unauthorized"}), status=401)
+
+def check_authorization(request):
+	if request.method == "GET":
+		authorization = request.META['HTTP_AUTHORIZATION']
+		authorization = authorization.split(' ')
+		if authorization[0] == "Bearer":
+			try:
+				token = Token.objects.get(access_token=authorization[1])
+
+			except ObjectDoesNotExist:
+				return False		
+		else:
+			return False
+	return True

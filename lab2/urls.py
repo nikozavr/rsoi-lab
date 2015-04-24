@@ -12,5 +12,8 @@ urlpatterns = patterns('',
     url(r'^account/$', views.account, name='account'),
     url(r'^users/me/$', views.userinfo, name="userinfo"),
     url(r'^auth/token/$', views.token, name='token'),
-
+    url(r'^manufacturers/$', views.manufacturers, name='manufacturers'),
+    url(r'^manufacturers/(?P<manufacturer_id>[0-9]+)/$', views.man_detail, name='man_detail'),
+    url(r'^devices/$', views.devices, name='devices'),
+    url(r'^devices/(?P<device_id>[0-9]+)/$', views.dev_detail, name='dev_detail'),
 )

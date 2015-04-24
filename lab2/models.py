@@ -71,13 +71,13 @@ class Token(models.Model):
 		self.refresh_token = hashlib.sha224('refresh'.encode('utf-8') + self.code.encode('utf-8') + now.strftime(settings.DATE_FORMAT).encode('utf-8')).hexdigest()
 		return (self.access_token, self.refresh_token, self.token_expires.strftime(settings.DATE_FORMAT), self.token_type)
 
-class Manufature(models.Model):
+class Manufacturers(models.Model):
 	name = models.CharField(max_length=30)
 	established = models.DateTimeField()
 	country = models.CharField(max_length=30)
 
-class Device(models.Model):
-	manufature = models.ForeignKey(Manufature)
+class Devices(models.Model):
+	manufature = models.ForeignKey(Manufacturers)
 	name = models.CharField(max_length=100)
 	device_type = models.CharField(max_length=50)
 	dig_disp = models.IntegerField()
