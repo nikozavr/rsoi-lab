@@ -80,6 +80,8 @@ USE_TZ = True
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
+DATE_FORMAT_YEAR = '%Y'
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/

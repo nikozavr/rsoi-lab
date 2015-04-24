@@ -73,12 +73,12 @@ class Token(models.Model):
 
 class Manufacturers(models.Model):
 	name = models.CharField(max_length=30)
-	established = models.DateTimeField()
+	established = models.IntegerField()
 	country = models.CharField(max_length=30)
 
 class Devices(models.Model):
-	manufature = models.ForeignKey(Manufacturers)
+	manufacturer = models.ForeignKey(Manufacturers)
 	name = models.CharField(max_length=100)
 	device_type = models.CharField(max_length=50)
-	dig_disp = models.IntegerField()
-	color = models.CharField(max_length=25)
+	dig_disp = models.FloatField()
+	year = models.IntegerField()
