@@ -235,10 +235,10 @@ def manufacturers(request):
 					first = on_page * (page-1)
 					if first + 1 > count:
 						return HttpResponseNotFound(json.dumps({"error": "invalid_request", "info": "Number of page is too big"}))
-					if (first + on_page + 1) < count:
+					if (first + on_page ) < count:
 						last = first + on_page
 					else:
-						last = count - 1
+						last = count
 					for i in range(first, last):
 						manufacturer = manufacturers[i]
 						datal = {"id": manufacturer.id,
@@ -305,13 +305,13 @@ def devices(request):
 					on_page = int(on_page)
 					devices = Devices.objects.all()
 					count = Devices.objects.count()
-					first = on_page * (page)
+					first = on_page * (page-1)
 					if first + 1 > count:
 						return HttpResponseNotFound(json.dumps({"error": "invalid_request", "info": "Number of page is too big"}))
-					if (first + on_page + 1) < count:
+					if (first + on_page ) < count:
 						last = first + on_page
 					else:
-						last = count - 1
+						last = count
 					for i in range(first, last):
 						device = devices[i]
 						datal = {"id": device.id,
