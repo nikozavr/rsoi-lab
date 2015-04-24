@@ -16,7 +16,9 @@ def auth(request):
 		client_id = request.GET.get("client_id","")
 		redirect_uri = request.GET.get("redirect_uri","")
 		response_type = request.GET.get("response_type","")
-		if response_type == 'code':
+		if client_id == "" and response_type == "":
+			return account(request)
+		elif response_type == 'code':
 			if client_id != None:
 				try:
 					app = Apps.objects.get(client_id=client_id)

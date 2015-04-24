@@ -3,7 +3,7 @@ from django.conf.urls import patterns, include, url
 from lab2 import views
 
 urlpatterns = patterns('',
-    url(r'^$', views.index, name='index'),
+    url(r'^$', views.auth, name='auth'),
     url(r'^auth/$', views.auth, name='auth'),
     url(r'^logout/$', views.logout, name='logout'),
     url(r'^register/$', views.register, name='register'),
