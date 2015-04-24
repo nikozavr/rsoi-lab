@@ -154,16 +154,16 @@ def issue_access_token(token, code, redirect_uri):
 										"token_type": token_type,
 										"expires": exp}),0)
 				else:
-					return (json.dumps({'error': "invalid_grant", "info": "Uri doesn't match"}),1)
+					return (json.dumps({'error': "invalid_request", "info": "Uri doesn't match"}),1)
 			else:
 				return (json.dumps({"access_token": token.access_token,
 										"refresh_token": token.refresh_token,
 										"token_type": token.token_type,
 										"expires": token.code_expires.strftime(settings.DATE_FORMAT)}),0)
 		else:
-			return (json.dumps({'error': "invalid_grant","info": "code has expired"}),1)
+			return (json.dumps({'error': "invalid_request","info": "code has expired"}),1)
 	else:
-		return (json.dumps({'error': "invalid_grant", "info": "code is incorrect"}),1)
+		return (json.dumps({'error': "invalid_request", "info": "code is incorrect"}),1)
 
 def account(request):
 	if request.method == "GET":
@@ -203,9 +203,9 @@ def current_user(request):
 
 def manufacturers(request):
 	authorized = check_authorization(request)
-	if authorized == True:
+	if authorized == 1:
 		if request.method == "GET":
-			data = {}
+			data = []
 			response_data = {}
 			page = request.GET.get("page","")
 			on_page = request.GET.get("on_page","")
@@ -216,10 +216,11 @@ def manufacturers(request):
 				
 				i = 0
 				for manufacturer in manufacturers:
-					data[i] = {"id": manufacturer.id,
+					datal = {"id": manufacturer.id,
 								"name": manufacturer.name,
 								"established": manufacturer.established,
 								"country": manufacturer.country}
+					data.append(datal)
 					i += 1
 				response_data["entries"] = data
 				return HttpResponse(json.dumps(response_data))
@@ -238,10 +239,11 @@ def manufacturers(request):
 						last = count - 1
 					for i in range(first, last):
 						manufacturer = manufacturers[i]
-						data[i] = {"id": manufacturer.id,
+						datal = {"id": manufacturer.id,
 								"name": manufacturer.name,
 								"established": manufacturer.established,
 								"country": manufacturer.country}
+						data.append(datal)
 
 					response_data["current_page"] = page
 					response_data["on_page"] = on_page
@@ -250,12 +252,14 @@ def manufacturers(request):
 					return HttpResponse(json.dumps(response_data))
 				except ValueError:
 					return HttpResponseBadRequest(json.dumps({"error": "invalid_request", "info": "page and on_page parameter are incorrect"}))
-	else:
+	elif authorized == 0:
 		return HttpResponse(json.dumps({"error": "unauthorized"}), status=401)	
+	else:
+		return HttpResponse(json.dumps({"error": "token expired"}), status=401)
 
 def man_detail(request, manufacturer_id):
 	authorized = check_authorization(request)
-	if authorized == True:
+	if authorized == 1:
 		try:
 			manufacturer = Manufacturers.objects.get(pk=manufacturer_id)
 			return HttpResponse(json.dumps({"id": manufacturer.id,
@@ -264,14 +268,16 @@ def man_detail(request, manufacturer_id):
 											"country": manufacturer.country}))
 		except ObjectDoesNotExist:
 			return HttpResponseNotFound(json.dumps({"error": "Manufacturer with this ID is not found"}))
-	else:
+	elif authorized == 0:
 		return HttpResponse(json.dumps({"error": "unauthorized"}), status=401)	
+	else:
+		return HttpResponse(json.dumps({"error": "token expired"}), status=401)
 
 def devices(request):
 	authorized = check_authorization(request)
-	if authorized == True:
+	if authorized == 1:
 		if request.method == "GET":
-			data = {}
+			data = []
 			response_data = {}
 			page = request.GET.get("page","")
 			on_page = request.GET.get("on_page","")
@@ -282,13 +288,13 @@ def devices(request):
 				
 				i = 0
 				for device in devices:
-					data[i] = {"id": device.id,
+					datal= {"id": device.id,
 								"manufacturer": device.manufacturer.name,
 								"name": device.name,
 								"dig_disp": device.dig_disp,
 								"device_type": device.device_type,
 								"year": device.year}
-					i += 1
+					data.append(datal)
 				response_data["entries"] = data
 				return HttpResponse(json.dumps(response_data))
 			else:
@@ -306,12 +312,13 @@ def devices(request):
 						last = count - 1
 					for i in range(first, last):
 						device = devices[i]
-						data[i] = {"id": device.id,
+						datal = {"id": device.id,
 											"manufacturer": device.manufacturer.name,
 											"name": device.name,
 											"dig_disp": device.dig_disp,
 											"device_type": device.device_type,
 											"year": device.year}
+						data.append(datal)
 
 					response_data["current_page"] = page
 					response_data["on_page"] = on_page
@@ -320,12 +327,14 @@ def devices(request):
 					return HttpResponse(json.dumps(response_data))
 				except ValueError:
 					return HttpResponseBadRequest(json.dumps({"error": "invalid_request", "info": "page and on_page parameter are incorrect"}))
+	elif authorized == 0:
+		return HttpResponse(json.dumps({"error": "unauthorized"}), status=401)
 	else:
-		return HttpResponse(json.dumps({"error": "unauthorized"}), status=401)	
+		return HttpResponse(json.dumps({"error": "token expired"}), status=401)	
 
 def dev_detail(request, device_id):
 	authorized = check_authorization(request)
-	if authorized == True:
+	if authorized == 1:
 		try:
 			device = Devices.objects.get(pk=device_id)
 			return HttpResponse(json.dumps({"id": device.id,
@@ -336,8 +345,10 @@ def dev_detail(request, device_id):
 											"year": device.year}))
 		except ObjectDoesNotExist:
 			return HttpResponseNotFound(json.dumps({"error": "Device with this ID is not found"}))
-	else:
+	elif authorized == 0:
 		return HttpResponse(json.dumps({"error": "unauthorized"}), status=401)
+	else:
+		return HttpResponse(json.dumps({"error": "token expired"}), status=401)
 
 def check_authorization(request):
 	if request.method == "GET":
@@ -346,9 +357,10 @@ def check_authorization(request):
 		if authorization[0] == "Bearer":
 			try:
 				token = Token.objects.get(access_token=authorization[1])
-
+				if not token.token_expired():
+					return -1
 			except ObjectDoesNotExist:
-				return False		
+				return 0		
 		else:
-			return False
-	return True
+			return 0
+	return 1
