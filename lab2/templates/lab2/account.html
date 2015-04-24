@@ -37,6 +37,7 @@
       <div class="page-header">
         <h1>Информация о приложении</h1>
       </div>
+      <form action="{% url 'lab2:logout' %}" method="get">
             <label class="col-sm-3 control-label"  for="name">Имя</label>
               <div class="col-sm-9">
                 <p id="name" name="name">{{ name }}</p>
@@ -51,6 +52,13 @@
               <div class="col-sm-9">
                 <p id="client_secret" name="client_secret">{{ client_secret }}</p>
               </div>
+
+             <div class="control-group">
+				      <!-- Button -->
+			      <div class="button-reg">
+			        <button class="btn btn-success btn-lg btn-block" type="submit">Выйти</button>
+			      </div>
+		</div>
     </div>
 
     <footer class="footer">
