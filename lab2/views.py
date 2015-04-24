@@ -220,7 +220,50 @@ def current_user(request):
 	return None
 
 def manufacturers(request):
-	return HttpResponse("manufacturers")
+	authorized = check_authorization(request)
+	if authorized == True:
+		if request.method == "GET":
+			page = request.GET.get("page","")
+			on_page = request.GET.get("on_page","")
+			if page == "" and on_page == "":
+				response_data = {}
+				manufacturers = Manufacturers.objects.all()
+				response_data["total_entries"] = Manufacturers.objects.count()
+				data = {}
+				i = 0
+				for manufacturer in manufacturers:
+					data[i++] = {"id": manufacturer.id,
+								"name": manufacturer.name,
+								"established": manufacturer.established,
+								"country": manufacturer.country}
+				response_data["entries"] = data
+				return HttpResponse(json.dumps(response_data))
+			else:
+				try:
+					page = int(page)
+					on_page = int(on_page)
+					manufacturers = Manufacturers.objects.all()
+					count = Manufacturers.objects.count()
+					first = on_page * (page-1)
+					if first + 1 > count:
+						return HttpResponseNotFound(json.dumps({"error": "invalid_request", "info": "Number of page is too big"}))
+					last = (first + on_page + 1) > count ? (first+ on_page) : (count-1)
+					j= 0
+					for i in range(first, last):
+						data[j++] = {"id": manufacturer.id,
+								"name": manufacturer.name,
+								"established": manufacturer.established,
+								"country": manufacturer.country}
+
+					response_data["current_page"] = page
+					response_data["on_page"] = on_page
+					response_data["total_entries"] = count
+					response_data["entries"] = data
+					return HttpResponse(json.dumps(response_data))
+				except ValueError:
+					return HttpResponseBadRequest(json.dumps({"error": "invalid_request", "info": "page and on_page parameter are incorrect"}))
+	else:
+		return HttpResponse("manufacturers")
 
 def man_detail(request, manufacturer_id):
 	authorized = check_authorization(request)
