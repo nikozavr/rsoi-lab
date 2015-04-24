@@ -29,7 +29,7 @@ def auth(request):
 							if token.code_expired():
 								token.delete()
 								token = Token.create(app, redirect_uri)
-								tokeb.save()
+								token.save()
 						except ObjectDoesNotExist:
 							token = Token.create(app, redirect_uri)
 							token.save()
@@ -114,19 +114,22 @@ def register_post(request):
 
 def token(request):
 	if request.method == "POST":
-		code = request.POST.get("code","")
 		client_id = request.POST.get("client_id","")
 		client_secret = request.POST.get("client_secret","")
-		redirect_uri = request.POST.get("redirect_uri","")
 		grant_type = request.POST.get("grant_type","")
-		if grant_type == "grant_type":
+		if grant_type == "authorization_code":
 			try:
+				code = request.POST.get("code","")
+				redirect_uri = request.POST.get("redirect_uri","")
 				app = Apps.objects.get(client_id=client_id)
 				if app.client_secret == client_secret:
 					try:
 						token = Token.objects.get(app_id=app)
+
+
 					except ObjectDoesNotExist:
-						return 
+						return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
+										"info": "client_secret is invalid"}))
 				else:
 					return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
 										"info": "client_secret is invalid"}))
@@ -135,11 +138,42 @@ def token(request):
 				return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
 										"info": "client_id is invalid"}))
 
+		elif grant_type == "refresh_token":
+			return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
+										"info": "grant_type is invalid"}))			
+
+
+
 		else:
 			return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
-										"info": "grant_type must be grant_type"}))			
+										"info": "grant_type is invalid"}))
 
 	return HttpResponse("token")
+
+def issue_access_token(token, code, redirect_uri):
+	if token.code == code:
+		if token.code_expired():
+			if token.access_token == None:
+				if token.redirect_uri == redirect_uri:
+					access_token, refresh_token, exp, token_type = token.create_token()
+					token.save()
+					return json.dumps({"access_token": access_token,
+										"refresh_token": refresh_token,
+										"token_type": token_type,
+										"expires": exp})
+				else:
+					HttpResponseBadRequest(json.dumps({'error': "invalid_grant", 
+										"info": "Uri doesn't match"}))
+			else:
+				token.delete()
+				HttpResponseBadRequest(json.dumps({'error': "invalid_grant", 
+										"info": "Reuse of code"}))
+		else:
+			return HttpResponseBadRequest(json.dumps({'error': "invalid_grant", 
+										"info": "code has expired"}))
+	else:
+		return HttpResponseBadRequest(json.dumps({'error': "invalid_grant", 
+										"info": "code is incorrect"}))
 
 def country(request):
 	return HttpResponse("country")

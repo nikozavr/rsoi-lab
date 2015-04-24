@@ -6,6 +6,7 @@ import string
 import random
 import hashlib
 from datetime import datetime, timedelta
+from django.utils.timezone import utc
 from django.conf import settings
 
 class Users(models.Model):
@@ -41,14 +42,15 @@ class Token(models.Model):
 	app_id = models.OneToOneField(Apps)
 	code = models.CharField(max_length=100, unique=True)
 	access_token = models.CharField(max_length=100, null=True)
+	token_type = models.CharField(max_length=50, null=True)
 	refresh_token = models.CharField(max_length=100,null=True)
-	token_expires = models.DateField(null=True)
-	code_expires = models.CharField(max_length=30)
+	token_expires = models.DateTimeField(null=True)
+	code_expires = models.DateTimeField(null=True)
 	redirect_uri = models.CharField(max_length=100, null=True)
 
 	@classmethod
 	def create(cls, app, redirect_uri = None):
-		now = datetime.utcnow()
+		now = datetime.utcnow().replace(tzinfo=utc)
 		code_expires = now + timedelta(minutes = 10)
 		string = app.client_id
 		code = hashlib.sha224(string.encode('utf-8') + now.strftime(settings.DATE_FORMAT).encode('utf-8')).hexdigest()
@@ -59,17 +61,18 @@ class Token(models.Model):
 		return 'id: %d, client_id: %d, code: %s, expires: %s, redirect_uri: %s, access: %s, refresh:%s' % (self.id, self.client_id, self.code, self.code_expires.strftime(DATE_FORMAT), self.redirect_uri, self.access_token, self.refresh_token)
 
 	def code_expired(self):
-		return not (self.code_expires - datetime.utcnow() > timedelta(seconds=0))
+		return not (self.code_expires - datetime.utcnow().replace(tzinfo=utc) > timedelta(seconds=0))
 
 	def token_expired(self):
-		return not (self.token_expires - datetime.utcnow() > timedelta(seconds=0))
+		return not (self.token_expires - datetime.utcnow().replace(tzinfo=utc) > timedelta(seconds=0))
 
-	def create_tokens(self):
-		now = datetime.utcnow()
+	def create_token(self):
+		self.token_type = "Bearer"
+		now = datetime.utcnow().replace(tzinfo=utc)
 		self.token_expires = now + timedelta(minutes = 4)
-		self.access_token = hashlib.sha224('access' + self.code + now.strftime(DATE_FORMAT)).hexdigest()
-		self.refresh_token = hashlib.sha224('refresh' + self.code + now.strftime(DATE_FORMAT)).hexdigest()
-		return (self.access_token, self.refresh_token, self.token_expires.strftime(DATE_FORMAT))
+		self.access_token = hashlib.sha224('access'.encode('utf-8') + self.code.encode('utf-8') + now.strftime(settings.DATE_FORMAT).encode('utf-8')).hexdigest()
+		self.refresh_token = hashlib.sha224('refresh'.encode('utf-8') + self.code.encode('utf-8') + now.strftime(settings.DATE_FORMAT).encode('utf-8')).hexdigest()
+		return (self.access_token, self.refresh_token, self.token_expires.strftime(settings.DATE_FORMAT), self.token_type)
 
 	
 class Country(models.Model):
