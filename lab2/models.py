@@ -57,14 +57,11 @@ class Token(models.Model):
 		token = cls(app_id=app, code=code, code_expires=code_expires, redirect_uri=redirect_uri)
 		return token
 
-	def __repr__(self):
-		return 'id: %d, client_id: %d, code: %s, expires: %s, redirect_uri: %s, access: %s, refresh:%s' % (self.id, self.client_id, self.code, self.code_expires.strftime(DATE_FORMAT), self.redirect_uri, self.access_token, self.refresh_token)
-
 	def code_expired(self):
-		return not (self.code_expires - datetime.utcnow().replace(tzinfo=utc) > timedelta(seconds=0))
+		return (self.code_expires - datetime.utcnow().replace(tzinfo=utc) > timedelta(seconds=0))
 
 	def token_expired(self):
-		return not (self.token_expires - datetime.utcnow().replace(tzinfo=utc) > timedelta(seconds=0))
+		return (self.token_expires - datetime.utcnow().replace(tzinfo=utc) > timedelta(seconds=0))
 
 	def create_token(self):
 		self.token_type = "Bearer"
@@ -74,15 +71,14 @@ class Token(models.Model):
 		self.refresh_token = hashlib.sha224('refresh'.encode('utf-8') + self.code.encode('utf-8') + now.strftime(settings.DATE_FORMAT).encode('utf-8')).hexdigest()
 		return (self.access_token, self.refresh_token, self.token_expires.strftime(settings.DATE_FORMAT), self.token_type)
 
-	
-class Country(models.Model):
+class Manufature(models.Model):
 	name = models.CharField(max_length=30)
+	established = models.DateTimeField()
+	country = models.CharField(max_length=30)
 
-class City(models.Model):
-	country = models.ForeignKey(Country)
-	name = models.CharField(max_length=30)
-
-class Monument(models.Model):
-	city = models.ForeignKey(City)
-	name = models.CharField(max_length=30)
-	date = models.DateField()
+class Device(models.Model):
+	manufature = models.ForeignKey(Manufature)
+	name = models.CharField(max_length=100)
+	device_type = models.CharField(max_length=50)
+	dig_disp = models.IntegerField()
+	color = models.CharField(max_length=25)

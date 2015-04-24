@@ -4,6 +4,8 @@ from lab2.models import Users, Apps, Token
 from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist
 
+from django.views.decorators.csrf import csrf_exempt
+
 
 from django.contrib.auth.hashers import make_password, check_password
 import json
@@ -26,7 +28,7 @@ def auth(request):
 					if user.id == user_app.id:
 						try:
 							token = Token.objects.get(app_id=app)
-							if token.code_expired():
+							if not token.code_expired():
 								token.delete()
 								token = Token.create(app, redirect_uri)
 								token.save()
@@ -70,7 +72,7 @@ def auth(request):
 			context = {"name": user.name,
 					"client_id": app.client_id,
 					"client_secret": app.client_secret}
-			return redirect(request.url)
+			return redirect(request.path)
 		else:
 			return render(request, 'lab2/authorize.html', {"error_text": error_text})
 
@@ -112,41 +114,53 @@ def register_post(request):
 		app.save()
 	return render(request, 'lab2/register_success.html', )
 
+@csrf_exempt 
 def token(request):
 	if request.method == "POST":
 		client_id = request.POST.get("client_id","")
 		client_secret = request.POST.get("client_secret","")
 		grant_type = request.POST.get("grant_type","")
-		if grant_type == "authorization_code":
-			try:
-				code = request.POST.get("code","")
-				redirect_uri = request.POST.get("redirect_uri","")
-				app = Apps.objects.get(client_id=client_id)
-				if app.client_secret == client_secret:
-					try:
-						token = Token.objects.get(app_id=app)
+		try:
+			app = Apps.objects.get(client_id=client_id)
+			if app.client_secret == client_secret:
+				try:
+					token = Token.objects.get(app_id=app)
+					if grant_type == "authorization_code":
+						code = request.POST.get("code","")
+						redirect_uri = request.POST.get("redirect_uri","")
+						res_json, error = issue_access_token(token, code, redirect_uri)
+						if error == 0:
+							return HttpResponse(res_json)
+						else: 
+							return HttpResponseBadRequest(res_json)
+						
+					elif grant_type == "refresh_token":
+						refresh_token = request.POST.get("refresh_token","")
+						if refresh_token == token.refresh_token:
+							access_token, refresh_token, exp, token_type = token.create_token()
+							token.save()
+							return HttpResponse(json.dumps({"access_token": access_token,
+												"refresh_token": refresh_token,
+												"token_type": token_type,
+												"expires": exp}),0)
+						else:
+							return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
+												"info": "refresh_token is invalid"}))
 
-
-					except ObjectDoesNotExist:
+					else:
 						return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
-										"info": "client_secret is invalid"}))
-				else:
-					return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
-										"info": "client_secret is invalid"}))
+												"info": "grant_type is invalid"}))
 
-			except ObjectDoesNotExist:
+				except ObjectDoesNotExist:
+						return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
+										"info": "client_id and client_secret is invalid"}))
+			else:
 				return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
-										"info": "client_id is invalid"}))
+									"info": "client_secret is invalid"}))
 
-		elif grant_type == "refresh_token":
+		except ObjectDoesNotExist:
 			return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
-										"info": "grant_type is invalid"}))			
-
-
-
-		else:
-			return HttpResponseBadRequest(json.dumps({'error': "invalid_request", 
-										"info": "grant_type is invalid"}))
+									"info": "client_id is invalid"}))
 
 	return HttpResponse("token")
 
@@ -157,42 +171,39 @@ def issue_access_token(token, code, redirect_uri):
 				if token.redirect_uri == redirect_uri:
 					access_token, refresh_token, exp, token_type = token.create_token()
 					token.save()
-					return json.dumps({"access_token": access_token,
+					return (json.dumps({"access_token": access_token,
 										"refresh_token": refresh_token,
 										"token_type": token_type,
-										"expires": exp})
+										"expires": exp}),0)
 				else:
-					HttpResponseBadRequest(json.dumps({'error': "invalid_grant", 
-										"info": "Uri doesn't match"}))
+					return (json.dumps({'error': "invalid_grant", "info": "Uri doesn't match"}),1)
 			else:
-				token.delete()
-				HttpResponseBadRequest(json.dumps({'error': "invalid_grant", 
-										"info": "Reuse of code"}))
+				return (json.dumps({"access_token": token.access_token,
+										"refresh_token": token.refresh_token,
+										"token_type": token.token_type,
+										"expires": token.code_expires.strftime(settings.DATE_FORMAT)}),0)
 		else:
-			return HttpResponseBadRequest(json.dumps({'error': "invalid_grant", 
-										"info": "code has expired"}))
+			return (json.dumps({'error': "invalid_grant","info": "code has expired"}),1)
 	else:
-		return HttpResponseBadRequest(json.dumps({'error': "invalid_grant", 
-										"info": "code is incorrect"}))
-
-def country(request):
-	return HttpResponse("country")
-
-def city(request):
-	return HttpResponse("city")
-
-def monument(request):
-	return HttpResponse("monument")
+		return (json.dumps({'error': "invalid_grant", "info": "code is incorrect"}),1)
 
 def account(request):
+	if request.method == "GET"
 	user = current_user(request)
-	app = user.apps_set.get()
-	context = {"name": user.name,
-				"client_id": app.client_id,
-				"client_secret": app.client_secret}
+	if user != None:
+		app = user.apps_set.get()
+		context = {"name": user.name,
+					"client_id": app.client_id,
+					"client_secret": app.client_secret}
+	else:
+		context = {"name": "None",
+					"client_id": "None",
+					"client_secret": "None"}
 	return render(request, 'lab2/account.html', context)
 
 def userinfo(request):
+#	if request.method == "GET":
+
 	return HttpResponse("userinfo")
 
 def logout(request):
@@ -205,5 +216,9 @@ def logout(request):
 def current_user(request):
 	if 'id' in request.session:
 		uid = request.session['id']
-		return Users.objects.get(pk=uid)
+		try:
+			user = Users.objects.get(pk=uid)
+			return user
+		except ObjectDoesNotExist:
+			return None
 	return None

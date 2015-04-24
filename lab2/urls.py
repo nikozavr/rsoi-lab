@@ -10,9 +10,7 @@ urlpatterns = patterns('',
     url(r'^register/$', views.register, name='register'),
     url(r'^register/post/$', views.register_post, name='register_post'),
     url(r'^account/$', views.account, name='account'),
-    url(r'^userinfo/$', views.userinfo, name="userinfo"),
+    url(r'^users/me/$', views.userinfo, name="userinfo"),
     url(r'^auth/token/$', views.token, name='token'),
-    url(r'^country/$', views.country, name='country'),
-    url(r'^city/$', views.city, name='city'),
-    url(r'^monument/$', views.monument, name='monument'),
+
 )
